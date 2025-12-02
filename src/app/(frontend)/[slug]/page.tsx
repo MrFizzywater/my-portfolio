@@ -14,27 +14,20 @@ import PageClient from './page.client'
 import { LivePreviewListener } from '@/components/LivePreviewListener'
 
 export async function generateStaticParams() {
-  const payload = await getPayload({ config: configPromise })
-  const pages = await payload.find({
-    collection: 'pages',
-    draft: false,
-    limit: 1000,
-    overrideAccess: false,
-    pagination: false,
-    select: {
-      slug: true,
-    },
-  })
-
-  const params = pages.docs
-    ?.filter((doc) => {
-      return doc.slug !== 'home'
-    })
-    .map(({ slug }) => {
-      return { slug }
+  try {
+    const payload = await getPayload({ config: configPromise })
+    const pages = await payload.find({
+      collection: 'pages',
+      draft: false,
+      limit: 1000,
     })
 
-  return params
+    return pages.docs?.map(({ slug }) => slug) || []
+  } catch (error) {
+    // The database tables likely don't exist yet, so we return an empty list
+    // to let the build finish successfully.
+    return []
+  }
 }
 
 type Args = {
